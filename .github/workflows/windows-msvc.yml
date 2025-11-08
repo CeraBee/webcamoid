@@ -32,3 +32,18 @@ jobs:
       env:
         DAILY_BUILD: 1
       run: ./ports/ci/windows-msvc/deploy.bat
+
+
+      - name: Package app (Windows)
+        run: |
+          mkdir -p dist/windows
+          if [ -f build/Webcamoid.exe ]; then cp build/Webcamoid.exe dist/windows/; fi
+          if [ -f build/bin/Webcamoid.exe ]; then cp build/bin/Webcamoid.exe dist/windows/; fi
+          (cd dist/windows && zip -r ../webcamoid-windows.zip .)
+        shell: bash
+
+      - name: Upload artifact (Windows)
+        uses: actions/upload-artifact@v4
+        with:
+          name: webcamoid-windows
+          path: dist/webcamoid-windows.zip
