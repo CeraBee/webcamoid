@@ -1,67 +1,9 @@
-name: Build Webcamoid (Linux, Windows, macOS)
+name: Build Webcamoid (Windows only)
 
 on:
-  workflow_dispatch: {}
-  push:
-    tags:
-      - "v*"
-  pull_request:
+  workflow_dispatch: {}   # lets you trigger it manually from Actions tab
 
 jobs:
-  linux:
-    name: Ubuntu build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            cmake \
-            qtbase5-dev \
-            qtdeclarative5-dev \
-            qml-module-qtquick-controls \
-            qml-module-qtquick-controls2 \
-            qml-module-qtgraphicaleffects \
-            qml-module-qtwebsockets \
-            qml-module-qt-labs-platform \
-            libqt5svg5-dev \
-            libqt5multimedia5-plugins \
-            libqt5multimedia5 \
-            qml-module-qtquick-layouts \
-            qml-module-qt-labs-settings \
-            qml-module-qt-labs-folderlistmodel \
-            qml-module-qtwebchannel \
-            ninja-build
-
-      - name: Configure (CMake)
-        run: |
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
-
-      - name: Build
-        run: |
-          cmake --build build --config Release
-
-      - name: Package app (Linux)
-        run: |
-          mkdir -p dist/linux
-          # Try common output locations; adjust if the binary name/path differs
-          if [ -f build/Webcamoid ]; then cp build/Webcamoid dist/linux/; fi
-          if [ -f build/bin/Webcamoid ]; then cp build/bin/Webcamoid dist/linux/; fi
-          # Bundle QML assets (optional; app may expect them at runtime)
-          if [ -d share ]; then cp -r share dist/linux/share; fi
-          if [ -d resources ]; then cp -r resources dist/linux/resources; fi
-          # Create tarball
-          tar -czf dist/webcamoid-linux.tar.gz -C dist/linux .
-
-      - name: Upload artifact (Linux)
-        uses: actions/upload-artifact@v4
-        with:
-          name: webcamoid-linux
-          path: dist/webcamoid-linux.tar.gz
-
   windows:
     name: Windows build
     runs-on: windows-latest
@@ -70,17 +12,7 @@ jobs:
 
       - name: Install dependencies (Chocolatey)
         run: |
-          choco install -y cmake ninja
-        shell: powershell
-- name: Install Qt (Chocolatey)
-  run: |
-    choco install -y qt5-default
-  shell: powershell
-
-      - name: Set Qt env vars
-        run: |
-          $qtDir = Get-ChildItem -Directory "$env:USERPROFILE\Downloads\Qt\5.15.2\msvc2019_64" | Select-Object -First 1
-          echo "CMAKE_PREFIX_PATH=$env:USERPROFILE\Downloads\Qt\5.15.2\msvc2019_64" | Out-File -FilePath $env:GITHUB_ENV -Append
+          choco install -y cmake ninja qt5-default
         shell: powershell
 
       - name: Configure (CMake)
@@ -104,39 +36,3 @@ jobs:
         with:
           name: webcamoid-windows
           path: dist/webcamoid-windows.zip
-
-  macos:
-    name: macOS build
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install dependencies (Homebrew)
-        run: |
-          brew update
-          brew install cmake ninja qt@5
-          echo 'export PATH="/usr/local/opt/qt@5/bin:$PATH"' >> $HOME/.bash_profile
-          echo 'export CMAKE_PREFIX_PATH="/usr/local/opt/qt@5"' >> $HOME/.bash_profile
-          source $HOME/.bash_profile
-
-      - name: Configure (CMake)
-        run: |
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/usr/local/opt/qt@5
-
-      - name: Build
-        run: |
-          cmake --build build --config Release
-
-      - name: Package app (macOS)
-        run: |
-          mkdir -p dist/macos
-          # If the project creates a .app bundle, copy it; otherwise copy the binary
-          if [ -d build/Webcamoid.app ]; then cp -R build/Webcamoid.app dist/macos/; fi
-          if [ -f build/Webcamoid ]; then cp build/Webcamoid dist/macos/; fi
-          (cd dist/macos && zip -r ../webcamoid-macos.zip .)
-
-      - name: Upload artifact (macOS)
-        uses: actions/upload-artifact@v4
-        with:
-          name: webcamoid-macos
-          path: dist/webcamoid-macos.zip
