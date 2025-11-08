@@ -4,7 +4,7 @@
 
 <a target="_blank" href="https://webcamoid.github.io/"><img src="https://webcamoid.github.io/theme/images/screenshots/Main.webp" style="height: 240px;" /></a>
 
-## Description ##
+## Descriptfffion ##
 
 Unleash your creativity with Webcamoid, the versatile, cross-platform camera software designed for everyone!  
 Available on GNU/Linux, Mac, Windows, Android, and FreeBSD, Webcamoid lets you capture stunning photos and videos with ease. Manage multiple webcams effortlessly, each with customizable controls tailored to your needs.  
