@@ -1,38 +1,44 @@
 name: Build Webcamoid (Windows only)
 
 on:
-  workflow_dispatch: {}   # lets you trigger it manually from Actions tab
+  workflow_dispatch: {}  # Manual trigger from Actions tab
 
 jobs:
   windows:
     name: Windows build
     runs-on: windows-latest
+
     steps:
-      - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Install dependencies (Chocolatey)
-        run: |
-          choco install -y cmake ninja qt5-default
-        shell: powershell
+    - name: Install dependencies (Chocolatey)
+      run: |
+        choco install -y cmake ninja qt6-base
+      shell: powershell
 
-      - name: Configure (CMake)
-        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
-        shell: bash
+    - name: Set Qt path for CMake
+      run: echo "CMAKE_PREFIX_PATH=C:\\ProgramData\\chocolatey\\lib\\qt6-base\\tools\\qt6" >> $env:GITHUB_ENV
+      shell: powershell
 
-      - name: Build
-        run: cmake --build build --config Release
-        shell: bash
+    - name: Configure (CMake)
+      run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+      shell: bash
 
-      - name: Package app (Windows)
-        run: |
-          mkdir -p dist/windows
-          if [ -f build/Webcamoid.exe ]; then cp build/Webcamoid.exe dist/windows/; fi
-          if [ -f build/bin/Webcamoid.exe ]; then cp build/bin/Webcamoid.exe dist/windows/; fi
-          (cd dist/windows && zip -r ../webcamoid-windows.zip .)
-        shell: bash
+    - name: Build
+      run: cmake --build build --config Release
+      shell: bash
 
-      - name: Upload artifact (Windows)
-        uses: actions/upload-artifact@v4
-        with:
-          name: webcamoid-windows
-          path: dist/webcamoid-windows.zip
+    - name: Package app (Windows)
+      run: |
+        mkdir -p dist/windows
+        if [ -f build/Webcamoid.exe ]; then cp build/Webcamoid.exe dist/windows/; fi
+        if [ -f build/bin/Webcamoid.exe ]; then cp build/bin/Webcamoid.exe dist/windows/; fi
+        (cd dist/windows && zip -r ../webcamoid-windows.zip .)
+      shell: bash
+
+    - name: Upload artifact (Windows)
+      uses: actions/upload-artifact@v4
+      with:
+        name: webcamoid-windows
+        path: dist/webcamoid-windows.zip
