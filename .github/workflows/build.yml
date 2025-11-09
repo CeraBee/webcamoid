@@ -1,43 +1,50 @@
-name: Build Webcamoid (Windows only)
+name: Build Webcamoid (Windows via MSYS2)
 
 on:
-  workflow_dispatch: {}  # Manual trigger from Actions tab
+  workflow_dispatch: {}  # Manual trigger
 
 jobs:
-  windows:
-    name: Windows build
+  build:
     runs-on: windows-latest
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Install dependencies (Chocolatey)
+    - name: Install MSYS2 and dependencies
+      uses: msys2/setup-msys2@v2
+      with:
+        update: true
+        install: >-
+          base-devel
+          git
+          mingw-w64-x86_64-toolchain
+          mingw-w64-x86_64-cmake
+          mingw-w64-x86_64-qt6
+        msystem: MINGW64
+
+    - name: Build with CMake (MSYS2)
+      shell: msys2 {0}
       run: |
-        choco install -y cmake ninja qt6-base
-      shell: powershell
+        mkdir -p build
+        cmake \
+          -S . \
+          -B build \
+          -G "MSYS Makefiles" \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_INSTALL_PREFIX="${PWD}/webcamoid-data"
+        cmake --build build --parallel 4
+        cmake --install build
 
-    - name: Set Qt path for CMake
-      run: echo "CMAKE_PREFIX_PATH=C:\\ProgramData\\chocolatey\\lib\\qt6-base\\tools\\qt6" >> $env:GITHUB_ENV
-      shell: powershell
-
-    - name: Configure (CMake)
-      run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
-      shell: bash
-
-    - name: Build
-      run: cmake --build build --config Release
-      shell: bash
-
-    - name: Package app (Windows)
+    - name: Package Webcamoid
+      shell: msys2 {0}
       run: |
         mkdir -p dist/windows
-        if [ -f build/Webcamoid.exe ]; then cp build/Webcamoid.exe dist/windows/; fi
-        if [ -f build/bin/Webcamoid.exe ]; then cp build/bin/Webcamoid.exe dist/windows/; fi
-        (cd dist/windows && zip -r ../webcamoid-windows.zip .)
-      shell: bash
+        cp -r webcamoid-data/* dist/windows/
+        cd dist
+        zip -r webcamoid-windows.zip windows
 
-    - name: Upload artifact (Windows)
+    - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: webcamoid-windows
