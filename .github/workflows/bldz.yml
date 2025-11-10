@@ -1,6 +1,6 @@
 name: Windows MSYS
 
-on: [push, pull_request]
+on: [push, pull_request,workflow_dispatch]
 
 env:
   NJOBS: 4
@@ -117,14 +117,7 @@ jobs:
         tag_name: daily-build
       env:
         GITHUB_TOKEN: ${{ secrets.UPLOAD_TOKEN }}
-
               - name: Package app (Windows)
-        run: |
-          mkdir -p dist/windows
-          if [ -f build/Webcamoid.exe ]; then cp build/Webcamoid.exe dist/windows/; fi
-          if [ -f build/bin/Webcamoid.exe ]; then cp build/bin/Webcamoid.exe dist/windows/; fi
-          (cd dist/windows && zip -r ../webcamoid-windows.zip .)
-        shell: bash
 
       - name: Upload artifact (Windows)
         uses: actions/upload-artifact@v4
@@ -242,3 +235,5 @@ jobs:
 #        tag_name: daily-build
 #      env:
 #        GITHUB_TOKEN: ${{ secrets.UPLOAD_TOKEN }}
+
+
