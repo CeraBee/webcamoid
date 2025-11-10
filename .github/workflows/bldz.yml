@@ -1,6 +1,7 @@
 name: Windows MSYS
 
-on:   workflow_dispatch: {}  # Manual trigger
+on:  
+  workflow_dispatch: {}  # Manual trigger
 
 env:
   NJOBS: 4
